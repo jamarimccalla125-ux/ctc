@@ -4,19 +4,25 @@
   <meta charset="UTF-8">
   <title>catch the cube deluxe</title>
   <style>
-    body { margin: 0; background: #111; overflow: hidden; }
+    body { margin: 0; background: #111; overflow: hidden; font-family: sans-serif; }
     #game { background: #222; display: block; margin: 0 auto; }
-    #score, #coins, #highscore { position: absolute; top: 10px; color: white; font-size: 20px; font-family: sans-serif; }
+    #score, #coins, #highscore { position: absolute; top: 10px; color: white; font-size: 20px; }
     #score { left: 10px; }
     #coins { right: 10px; }
     #highscore { left: 50%; transform: translateX(-50%); }
-    #death, #shop, #bossbar, #menu { position: absolute; color: white; font-family: sans-serif; text-align: center; }
+    #death, #shop, #bossbar, #menu { position: absolute; color: white; text-align: center; }
     #death { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; display: none; }
     #death button, #shop button, #menu button { margin-top: 20px; font-size: 20px; padding: 10px 20px; cursor: pointer; }
     #shop { top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 20px; border-radius: 10px; display: none; }
     #bossbar { top: 40px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #550000; display: none; }
     #bossbar div { height: 100%; background: #ff0000; }
-    #menu { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; display: flex; flex-direction: column; align-items: center; }
+    #menu { top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    #menu h1 { font-size: 50px; color: #fff; text-shadow: 0 0 20px #f0f, 0 0 30px #0ff; animation: glow 2s infinite alternate; }
+    #menu button { font-size: 30px; padding: 15px 40px; margin-top: 30px; background: linear-gradient(90deg, #ff00ff, #00ffff); border: none; border-radius: 10px; color: #fff; cursor: pointer; animation: pulse 1s infinite alternate; }
+    #menuHighScore { margin-top: 20px; font-size: 25px; color: #fff; text-shadow: 0 0 10px #0ff; }
+
+    @keyframes glow { 0% { text-shadow: 0 0 10px #f0f, 0 0 20px #0ff; } 100% { text-shadow: 0 0 30px #f0f, 0 0 40px #0ff; } }
+    @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
   </style>
 </head>
 <body>
@@ -35,6 +41,7 @@
   </div>
 
   <div id="menu">
+    <canvas id="menuCanvas" width="600" height="400" style="position:absolute; top:0; left:0; z-index:0;"></canvas>
     <h1>Catch the Cube Deluxe</h1>
     <button onclick="startGame()">Play</button>
     <div id="menuHighScore">High Score: 0</div>
@@ -45,7 +52,11 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
 
+    const menuCanvas = document.getElementById('menuCanvas');
+    const menuCtx = menuCanvas.getContext('2d');
+
     let player, cubes, score, coins, keys, dead, skin, boss, bossActive, highscore, gameStarted;
+    let menuCubes = [];
 
     highscore = Number(localStorage.getItem('cube_highscore')) || 0;
     document.getElementById('highscore').innerText = 'high score: ' + highscore;
@@ -66,130 +77,67 @@
       document.getElementById('bossbar').style.display = 'none';
     }
 
-    function addCube() {
-      cubes.push({ x: Math.random()*560, y: -40, w: 40, h: 40, speed: 1.5 + Math.random() });
-    }
+    function addCube() { cubes.push({ x: Math.random()*560, y: -40, w: 40, h: 40, speed: 1.5 + Math.random() }); }
 
-    function spawnBoss() {
-      boss = { hp: 50, x: 200, y: 0, w: 200, h: 40 };
-      bossActive = true;
-      document.getElementById('bossbar').style.display = 'block';
-      updateBossBar();
-    }
+    function spawnBoss() { boss = { hp: 50, x: 200, y: 0, w: 200, h: 40 }; bossActive = true; document.getElementById('bossbar').style.display = 'block'; updateBossBar(); }
+    function updateBossBar() { document.getElementById('bosshealth').style.width = (boss.hp / 50) * 100 + '%'; }
 
-    function updateBossBar() {
-      const bar = document.getElementById('bosshealth');
-      bar.style.width = (boss.hp / 50) * 100 + '%';
-    }
-
-    function restart() {
-      reset();
-      loop();
-    }
-
+    function restart() { reset(); loop(); }
     function openShop() { document.getElementById('shop').style.display = 'block'; }
     function closeShop() { document.getElementById('shop').style.display = 'none'; }
+    function buySkin(color) { if (coins >= 20) { coins -= 20; skin = color; updateCoins(); } }
+    function buySpeed() { if (coins >= 30) { coins -= 30; player.speed++; updateCoins(); } }
+    function updateCoins() { document.getElementById('coins').innerText = 'coins: ' + coins; }
 
-    function buySkin(color) {
-      if (coins >= 20) { coins -= 20; skin = color; updateCoins(); }
-    }
-    function buySpeed() {
-      if (coins >= 30) { coins -= 30; player.speed++; updateCoins(); }
-    }
-
-    function updateCoins() {
-      document.getElementById('coins').innerText = 'coins: ' + coins;
-    }
-
-    document.addEventListener('keydown', e => {
-      keys[e.key] = true;
-      if (String(e.key).toLowerCase() === 'r' && dead) {
-        restart();
-      }
-    });
+    document.addEventListener('keydown', e => { keys[e.key] = true; if (String(e.key).toLowerCase() === 'r' && dead) { restart(); } });
     document.addEventListener('keyup', e => keys[e.key] = false);
 
     reset();
     gameStarted = false;
 
-    function startGame() {
-      gameStarted = true;
-      document.getElementById('menu').style.display = 'none';
-      loop();
-    }
+    function startGame() { gameStarted = true; document.getElementById('menu').style.display = 'none'; loop(); }
+
+    function intersect(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 
     function update() {
       if (dead || !gameStarted) return;
-
       let speedModifier = 1 + score * 0.01;
       let playerSpeedModifier = Math.max(2, player.speed - score * 0.01);
-
       if (keys['a'] || keys['ArrowLeft']) player.x -= playerSpeedModifier;
       if (keys['d'] || keys['ArrowRight']) player.x += playerSpeedModifier;
-
       player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
-
       for (let c of cubes) {
         c.y += c.speed * speedModifier;
-        if (c.y > 400) {
-          dead = true;
-          if (score > highscore) {
-            highscore = score;
-            localStorage.setItem('cube_highscore', highscore);
-            document.getElementById('highscore').innerText = 'high score: ' + highscore;
-          }
-          document.getElementById('death').style.display = 'block';
-        }
-        if (intersect(player, c)) {
-          score++;
-          coins++;
-          updateCoins();
-          document.getElementById('score').innerText = 'score: ' + score;
-          c.y = -40;
-          c.x = Math.random()*560;
-        }
+        if (c.y > 400) { dead = true; if (score > highscore) { highscore = score; localStorage.setItem('cube_highscore', highscore); document.getElementById('highscore').innerText = 'high score: ' + highscore; } document.getElementById('death').style.display = 'block'; }
+        if (intersect(player, c)) { score++; coins++; updateCoins(); document.getElementById('score').innerText = 'score: ' + score; c.y = -40; c.x = Math.random()*560; }
       }
-
       while (cubes.length < 2) addCube();
-
       if (score >= 20 && !bossActive) spawnBoss();
-      if (bossActive) {
-        boss.hp -= 0.5;
-        updateBossBar();
-        if (boss.hp <= 0) {
-          bossActive = false;
-          document.getElementById('bossbar').style.display = 'none';
-        }
-      }
-    }
-
-    function intersect(a, b) {
-      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      if (bossActive) { boss.hp -= 0.5; updateBossBar(); if (boss.hp <= 0) { bossActive = false; document.getElementById('bossbar').style.display = 'none'; } }
     }
 
     function draw() {
-      ctx.fillStyle = '#222';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = skin;
-      ctx.fillRect(player.x, player.y, player.w, player.h);
-
-      ctx.fillStyle = '#f00';
-      for (let c of cubes) ctx.fillRect(c.x, c.y, c.w, c.h);
-
-      if (bossActive) {
-        ctx.fillStyle = '#800';
-        ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-      }
+      ctx.fillStyle = '#222'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = skin; ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.fillStyle = '#f00'; for (let c of cubes) ctx.fillRect(c.x, c.y, c.w, c.h);
+      if (bossActive) { ctx.fillStyle = '#800'; ctx.fillRect(boss.x, boss.y, boss.w, boss.h); }
     }
 
-    function loop() {
-      if (!dead && gameStarted) {
-        update();
-        draw();
-        requestAnimationFrame(loop);
+    function loop() { if (!dead && gameStarted) { update(); draw(); requestAnimationFrame(loop); } }
+
+    // menu animation
+    for (let i = 0; i < 20; i++) menuCubes.push({ x: Math.random()*600, y: Math.random()*400, w: 20, h: 20, dx: Math.random()*2-1, dy: Math.random()*2-1, color: `hsl(${Math.random()*360}, 100%, 50%)` });
+    function drawMenu() {
+      menuCtx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
+      for (let c of menuCubes) {
+        menuCtx.fillStyle = c.color;
+        menuCtx.fillRect(c.x, c.y, c.w, c.h);
+        c.x += c.dx; c.y += c.dy;
+        if(c.x<0||c.x>580)c.dx*=-1; if(c.y<0||c.y>380)c.dy*=-1;
       }
+      requestAnimationFrame(drawMenu);
     }
+    drawMenu();
   </script>
 </body>
 </html>
