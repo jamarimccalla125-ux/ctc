@@ -41,7 +41,7 @@
   </div>
 
   <div id="menu">
-    <canvas id="menuCanvas" width="600" height="400" style="position:absolute; top:0; left:0; z-index:0;"></canvas>
+    <canvas id="menuCanvas" width="600" height="400" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0;"></canvas>
     <h1>Catch the Cube Deluxe</h1>
     <button onclick="startGame()">Play</button>
     <div id="menuHighScore">High Score: 0</div>
@@ -78,7 +78,6 @@
     }
 
     function addCube() { cubes.push({ x: Math.random()*560, y: -40, w: 40, h: 40, speed: 1.5 + Math.random() }); }
-
     function spawnBoss() { boss = { hp: 50, x: 200, y: 0, w: 200, h: 40 }; bossActive = true; document.getElementById('bossbar').style.display = 'block'; updateBossBar(); }
     function updateBossBar() { document.getElementById('bosshealth').style.width = (boss.hp / 50) * 100 + '%'; }
 
@@ -126,14 +125,15 @@
     function loop() { if (!dead && gameStarted) { update(); draw(); requestAnimationFrame(loop); } }
 
     // menu animation
-    for (let i = 0; i < 20; i++) menuCubes.push({ x: Math.random()*600, y: Math.random()*400, w: 20, h: 20, dx: Math.random()*2-1, dy: Math.random()*2-1, color: `hsl(${Math.random()*360}, 100%, 50%)` });
+    for (let i = 0; i < 50; i++) menuCubes.push({ x: Math.random()*menuCanvas.width, y: Math.random()*menuCanvas.height, w: 20, h: 20, dx: Math.random()*2-1, dy: Math.random()*2-1, color: `hsl(${Math.random()*360}, 100%, 50%)` });
     function drawMenu() {
       menuCtx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
       for (let c of menuCubes) {
         menuCtx.fillStyle = c.color;
         menuCtx.fillRect(c.x, c.y, c.w, c.h);
         c.x += c.dx; c.y += c.dy;
-        if(c.x<0||c.x>580)c.dx*=-1; if(c.y<0||c.y>380)c.dy*=-1;
+        if(c.x<0||c.x>menuCanvas.width-20)c.dx*=-1;
+        if(c.y<0||c.y>menuCanvas.height-20)c.dy*=-1;
       }
       requestAnimationFrame(drawMenu);
     }
