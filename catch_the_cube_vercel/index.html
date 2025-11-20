@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>catch the cube deluxe</title>
+  <style>
+    body { margin: 0; background: #111; overflow: hidden; }
+    #game { background: #222; display: block; margin: 0 auto; }
+    #score, #coins, #highscore { position: absolute; top: 10px; color: white; font-size: 20px; font-family: sans-serif; }
+    #score { left: 10px; }
+    #coins { right: 10px; }
+    #highscore { left: 50%; transform: translateX(-50%); }
+    #death, #shop, #bossbar { position: absolute; color: white; font-family: sans-serif; text-align: center; }
+    #death { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; display: none; }
+    #death button, #shop button { margin-top: 20px; font-size: 20px; padding: 10px 20px; cursor: pointer; }
+    #shop { top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 20px; border-radius: 10px; display: none; }
+    #bossbar { top: 40px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #550000; display: none; }
+    #bossbar div { height: 100%; background: #ff0000; }
+  </style>
+</head>
+<body>
+  <div id="score">score: 0</div>
+  <div id="highscore">high score: 0</div>
+  <div id="coins">coins: 0</div>
+  <div id="bossbar"><div id="bosshealth"></div></div>
+  <div id="death">you died 💀<br><button onclick="restart()">retry</button> <button onclick="openShop()">shop</button></div>
+
+  <div id="shop">
+    <h2>shop</h2>
+    <button onclick="buySkin('blue')">blue skin – 20 coins</button><br>
+    <button onclick="buySkin('yellow')">yellow skin – 20 coins</button><br>
+    <button onclick="buySpeed()">+1 speed – 30 coins</button><br>
+    <button onclick="closeShop()">close</button>
+  </div>
+
+  <canvas id="game" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    let player, cubes, score, coins, keys, dead, skin, boss, bossActive, highscore;
+
+    highscore = Number(localStorage.getItem('cube_highscore')) || 0;
+    document.getElementById('highscore').innerText = 'high score: ' + highscore;
+
+    function reset() {
+      player = { x: 280, y: 350, w: 40, h: 40, speed: 7 };
+      cubes = [];
+      for (let i = 0; i < 2; i++) addCube();
+      score = 0;
+      coins = coins || 0;
+      keys = {};
+      dead = false;
+      skin = skin || 'green';
+      bossActive = false;
+      document.getElementById('score').innerText = 'score: 0';
+      document.getElementById('death').style.display = 'none';
+      document.getElementById('bossbar').style.display = 'none';
+    }
+
+    function addCube() {
+      cubes.push({ x: Math.random()*560, y: -40, w: 40, h: 40, speed: 1.5 + Math.random() });
+    }
+
+    function spawnBoss() {
+      boss = { hp: 50, x: 200, y: 0, w: 200, h: 40 };
+      bossActive = true;
+      document.getElementById('bossbar').style.display = 'block';
+      updateBossBar();
+    }
+
+    function updateBossBar() {
+      const bar = document.getElementById('bosshealth');
+      bar.style.width = (boss.hp / 50) * 100 + '%';
+    }
+
+    function restart() {
+      reset();
+      loop();
+    }
+
+    function openShop() { document.getElementById('shop').style.display = 'block'; }
+    function closeShop() { document.getElementById('shop').style.display = 'none'; }
+
+    function buySkin(color) {
+      if (coins >= 20) { coins -= 20; skin = color; updateCoins(); }
+    }
+    function buySpeed() {
+      if (coins >= 30) { coins -= 30; player.speed++; updateCoins(); }
+    }
+
+    function updateCoins() {
+      document.getElementById('coins').innerText = 'coins: ' + coins;
+    }
+
+    document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (String(e.key).toLowerCase() === 'r' && dead) {
+        restart();
+      }
+    });
+    document.addEventListener('keyup', e => keys[e.key] = false);
+
+    reset();
+
+    function update() {
+      if (dead) return;
+
+      let speedModifier = 1 + score * 0.01;
+      let playerSpeedModifier = Math.max(2, player.speed - score * 0.01);
+
+      if (keys['a'] || keys['ArrowLeft']) player.x -= playerSpeedModifier;
+      if (keys['d'] || keys['ArrowRight']) player.x += playerSpeedModifier;
+
+      player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
+
+      for (let c of cubes) {
+        c.y += c.speed * speedModifier;
+        if (c.y > 400) {
+          dead = true;
+          if (score > highscore) {
+            highscore = score;
+            localStorage.setItem('cube_highscore', highscore);
+            document.getElementById('highscore').innerText = 'high score: ' + highscore;
+          }
+          document.getElementById('death').style.display = 'block';
+        }
+        if (intersect(player, c)) {
+          score++;
+          coins++;
+          updateCoins();
+          document.getElementById('score').innerText = 'score: ' + score;
+          c.y = -40;
+          c.x = Math.random()*560;
+        }
+      }
+
+      while (cubes.length < 2) addCube();
+
+      if (score >= 20 && !bossActive) spawnBoss();
+      if (bossActive) {
+        boss.hp -= 0.5;
+        updateBossBar();
+        if (boss.hp <= 0) {
+          bossActive = false;
+          document.getElementById('bossbar').style.display = 'none';
+        }
+      }
+    }
+
+    function intersect(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function draw() {
+      ctx.fillStyle = '#222';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = skin;
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      ctx.fillStyle = '#f00';
+      for (let c of cubes) ctx.fillRect(c.x, c.y, c.w, c.h);
+
+      if (bossActive) {
+        ctx.fillStyle = '#800';
+        ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+      }
+    }
+
+    function loop() {
+      if (!dead) {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+      }
+    }
+
+    loop();
+  </script>
+</body>
+</html>
