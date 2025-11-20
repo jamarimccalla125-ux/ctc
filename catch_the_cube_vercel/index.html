@@ -83,8 +83,10 @@
     function updateBoostsUI() { document.getElementById('boostsUI').innerText = 'boosts: ' + boosts; }
 
     function addCubePair() {
-      const centerX = Math.random() * (canvas.width - 200) + 100;
-      const offset = 100; // further apart now
+      const maxOffset = 150;
+      const minOffset = 60;
+      const centerX = Math.random() * (canvas.width - maxOffset*2) + maxOffset;
+      const offset = Math.random() * (maxOffset - minOffset) + minOffset;
       const positions = [centerX - offset, centerX + offset];
       cubes.push({ x: positions[0], y: -40, w: 40, h: 40, speed: 1 + Math.random() * 0.8 });
       cubes.push({ x: positions[1], y: -40, w: 40, h: 40, speed: 1 + Math.random() * 0.8 });
@@ -122,7 +124,7 @@
       for (let c of cubes) {
         c.y += c.speed * speedModifier;
         if (c.y > 400) { dead = true; if (score > highscore) { highscore = score; localStorage.setItem('cube_highscore', highscore); document.getElementById('highscore').innerText = 'high score: ' + highscore; } document.getElementById('death').style.display = 'block'; }
-        if (intersect(player, c)) { score++; coins++; updateCoins(); document.getElementById('score').innerText = 'score: ' + score; c.y = -40; c.x = player.x; }
+        if (intersect(player, c)) { score++; coins++; updateCoins(); document.getElementById('score').innerText = 'score: ' + score; c.y = -40; c.x = Math.min(Math.max(player.x + (Math.random()*100-50), 0), canvas.width-40); }
       }
       while (cubes.length < 2) addCubePair();
       if (score >= 20 && !bossActive) spawnBoss();
