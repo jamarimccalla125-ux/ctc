@@ -88,8 +88,8 @@
       const centerX = Math.random() * (canvas.width - maxOffset*2) + maxOffset;
       const offset = Math.random() * (maxOffset - minOffset) + minOffset;
       const positions = [centerX - offset, centerX + offset];
-      cubes.push({ x: positions[0], y: -40, w: 40, h: 40, speed: 1 + Math.random() * 0.8 });
-      cubes.push({ x: positions[1], y: -40, w: 40, h: 40, speed: 1 + Math.random() * 0.8 });
+      cubes.push({ x: positions[0], y: -40, w: 40, h: 40, speed: 2 + Math.random() * 1 });
+      cubes.push({ x: positions[1], y: -40, w: 40, h: 40, speed: 2 + Math.random() * 1 });
     }
 
     function spawnBoss() { boss = { hp: 50, x: 200, y: 0, w: 200, h: 40 }; bossActive = true; document.getElementById('bossbar').style.display = 'block'; updateBossBar(); }
@@ -116,7 +116,7 @@
 
     function update() {
       if (dead || !gameStarted) return;
-      let speedModifier = 1 + score * 0.01;
+      let speedModifier = 1 + score * 0.02;
       let playerSpeedModifier = Math.max(2, player.speed - score * 0.01);
       if (keys['a'] || keys['ArrowLeft']) player.x -= playerSpeedModifier;
       if (keys['d'] || keys['ArrowRight']) player.x += playerSpeedModifier;
