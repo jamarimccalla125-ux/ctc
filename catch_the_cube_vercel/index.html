@@ -83,11 +83,11 @@
     function updateBoostsUI() { document.getElementById('boostsUI').innerText = 'boosts: ' + boosts; }
 
     function addCubePair() {
-      const centerX = Math.random() * (canvas.width - 160) + 80;
-      const offset = 60; // max distance between cubes
+      const centerX = Math.random() * (canvas.width - 200) + 100;
+      const offset = 100; // further apart now
       const positions = [centerX - offset, centerX + offset];
-      cubes.push({ x: positions[0], y: -40, w: 40, h: 40, speed: 0.8 + Math.random() * 0.8 });
-      cubes.push({ x: positions[1], y: -40, w: 40, h: 40, speed: 0.8 + Math.random() * 0.8 });
+      cubes.push({ x: positions[0], y: -40, w: 40, h: 40, speed: 1 + Math.random() * 0.8 });
+      cubes.push({ x: positions[1], y: -40, w: 40, h: 40, speed: 1 + Math.random() * 0.8 });
     }
 
     function spawnBoss() { boss = { hp: 50, x: 200, y: 0, w: 200, h: 40 }; bossActive = true; document.getElementById('bossbar').style.display = 'block'; updateBossBar(); }
@@ -154,4 +154,3 @@
   </script>
 </body>
 </html>
-
