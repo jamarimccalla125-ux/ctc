@@ -11,7 +11,7 @@
     #coins { right: 10px; }
     #highscore { left: 50%; transform: translateX(-50%); }
     #boostsUI { right: 10px; top: 40px; }
-    #death, #shop, #bossbar, #menu { position: absolute; color: white; text-align: center; }
+    #death, #shop, #bossbar, #menu, #controlsTab { position: absolute; color: white; text-align: center; }
     #death { top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; display: none; }
     #death button, #shop button, #menu button { margin-top: 20px; font-size: 20px; padding: 10px 20px; cursor: pointer; }
     #shop { top: 50%; left: 50%; transform: translate(-50%, -50%); background: #333; padding: 20px; border-radius: 10px; display: none; }
@@ -19,8 +19,10 @@
     #bossbar div { height: 100%; background: #ff0000; }
     #menu { top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     #menu h1 { font-size: 50px; color: #fff; text-shadow: 0 0 20px #f0f, 0 0 30px #0ff; animation: glow 2s infinite alternate; }
-    #menu button { font-size: 30px; padding: 15px 40px; margin-top: 30px; background: linear-gradient(90deg, #ff00ff, #00ffff); border: none; border-radius: 10px; color: #fff; cursor: pointer; animation: pulse 1s infinite alternate; }
+    #menu button { font-size: 30px; padding: 15px 40px; margin-top: 20px; background: linear-gradient(90deg, #ff00ff, #00ffff); border: none; border-radius: 10px; color: #fff; cursor: pointer; animation: pulse 1s infinite alternate; }
     #menuHighScore { margin-top: 20px; font-size: 25px; color: #fff; text-shadow: 0 0 10px #0ff; }
+    #controlsTab { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; background: #333; padding: 20px; border-radius: 10px; display: none; font-size: 18px; text-align: left; }
+    #controlsTab button { margin-top: 10px; width: 100%; }
 
     @keyframes glow { 0% { text-shadow: 0 0 10px #f0f, 0 0 20px #0ff; } 100% { text-shadow: 0 0 30px #f0f, 0 0 40px #0ff; } }
     @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
@@ -46,7 +48,16 @@
     <canvas id="menuCanvas" width="600" height="400" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0;"></canvas>
     <h1>Catch the Cube Deluxe</h1>
     <button onclick="startGame()">Play</button>
+    <button onclick="openControls()">Controls</button>
     <div id="menuHighScore">High Score: 0</div>
+  </div>
+
+  <div id="controlsTab">
+    <h2>Controls</h2>
+    <p>A / Left Arrow: Move Left</p>
+    <p>D / Right Arrow: Move Right</p>
+    <p>R: Retry after death</p>
+    <button onclick="closeControls()">Close</button>
   </div>
 
   <canvas id="game" width="600" height="400"></canvas>
@@ -103,6 +114,9 @@
     function buySpeed() { if (coins >= 30) { coins -= 30; player.baseSpeed++; player.speed = player.baseSpeed; boosts++; updateCoins(); updateBoostsUI(); } }
 
     function updateCoins() { document.getElementById('coins').innerText = 'coins: ' + coins; }
+
+    function openControls() { document.getElementById('controlsTab').style.display = 'block'; }
+    function closeControls() { document.getElementById('controlsTab').style.display = 'none'; }
 
     document.addEventListener('keydown', e => { keys[e.key] = true; if (String(e.key).toLowerCase() === 'r' && dead) { restart(); } });
     document.addEventListener('keyup', e => keys[e.key] = false);
