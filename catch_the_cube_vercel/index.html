@@ -68,6 +68,7 @@
     const menuCtx = menuCanvas.getContext('2d');
 
     let player, cubes, score, coins, keys, dead, skin, boss, bossActive, highscore, gameStarted, boosts;
+    let totalBoosts = 0;
     let menuCubes = [];
 
     highscore = Number(localStorage.getItem('cube_highscore')) || 0;
@@ -76,7 +77,7 @@
 
     function reset() {
       player = { x: 280, y: 350, w: 40, h: 40, baseSpeed: 7, speed: 7 };
-      boosts = 0;
+      boosts = totalBoosts;
       updateBoostsUI();
       cubes = [];
       addCubePair();
@@ -110,7 +111,7 @@
     function closeShop() { document.getElementById('shop').style.display = 'none'; }
 
     function buySkin(color) { if (coins >= 20) { coins -= 20; skin = color; updateCoins(); } }
-    function buySpeed() { if (coins >= 30) { coins -= 30; player.baseSpeed++; player.speed = player.baseSpeed; boosts++; updateCoins(); updateBoostsUI(); } }
+    function buySpeed() { if (coins >= 30) { coins -= 30; player.baseSpeed++; player.speed = player.baseSpeed; boosts++; totalBoosts++; updateCoins(); updateBoostsUI(); } }
 
     function updateCoins() { document.getElementById('coins').innerText = 'coins: ' + coins; }
 
